@@ -1,14 +1,14 @@
 import cookieParser from "cookie-parser";
 import express from "express";
 
-
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js";
+import imagekitRoutes from "./routes/imagekit.routes.js";
 
 const app = express();
 
 // Parse form bodies, JSON payloads, and auth cookies for all routes.
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
 // Main feature routes.
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/imagekit", imagekitRoutes);
 
 // Fallback for unknown endpoints.
 app.use((req, res) => {

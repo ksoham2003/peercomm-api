@@ -44,4 +44,7 @@ router.put(
 // Delete a product by id; auth middleware ensures the requester is logged in.
 router.delete("/:id", authMiddleware, deleteProduct);
 
+
+
+
 export default router;
