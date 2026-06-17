@@ -48,6 +48,424 @@ src/
 
 ## Getting Started
 
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+- MongoDB (local or cloud - MongoDB Atlas recommended)
+- ImageKit account (for image uploads)
+- Git
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/peercomm-api.git
+   cd peercomm-api
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Setup environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Configure .env file** with your values:
+   ```env
+   PORT=3000
+   NODE_ENV=development
+   MONGODB_URI=mongodb://localhost:27017/peercomm
+   JWT_SECRET=your-secret-key-here
+   IMAGEKIT_PRIVATE_KEY=your-imagekit-private-key
+   IMAGEKIT_PUBLIC_KEY=your-imagekit-public-key
+   IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your-namespace
+   ```
+
+5. **Start MongoDB** (if using local):
+   ```bash
+   mongod
+   ```
+
+6. **Run the server:**
+   ```bash
+   # Development mode with auto-reload
+   npm run dev
+
+   # Production mode
+   npm start
+   ```
+
+7. **Test the API:**
+   ```bash
+   curl http://localhost:3000
+   # Expected response: {"message":"peerComm api is running..."}
+   ```
+
+---
+
+## API Endpoints
+
+### Authentication Endpoints
+
+#### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "secure123",
+  "confirmPassword": "secure123"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "active": true,
+    "createdAt": "2026-06-18T10:30:00Z"
+  }
+}
+```
+
+#### Login User
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "secure123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "active": true
+  }
+}
+```
+
+### Product Endpoints
+
+#### Create Product
+```http
+POST /api/products
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+name=Product Name
+description=Product Description
+price=9999
+category=Electronics
+images=<file1>, <file2>, ... (max 5 files)
+```
+
+**Response (201):**
+```json
+{
+  "message": "Product added successfully",
+  "product": {
+    "_id": "507f1f77bcf86cd799439012",
+    "name": "Product Name",
+    "description": "Product Description",
+    "price": 9999,
+    "category": "Electronics",
+    "images": ["https://ik.imagekit.io/..."],
+    "seller": {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "John Doe"
+    },
+    "createdAt": "2026-06-18T10:30:00Z"
+  }
+}
+```
+
+#### Get All Products
+```http
+GET /api/products?category=Electronics&page=1&limit=10
+```
+
+**Query Parameters:**
+- `category` (optional): Filter by product category
+- `page` (optional, default: 1): Page number for pagination
+- `limit` (optional, default: 10, max: 50): Items per page
+
+**Response (200):**
+```json
+{
+  "message": "products fetched successfully",
+  "count": 10,
+  "total": 45,
+  "page": 1,
+  "pages": 5,
+  "products": [...]
+}
+```
+
+#### Get My Products
+```http
+GET /api/products/my
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "products fetched successfully",
+  "count": 5,
+  "products": [...]
+}
+```
+
+#### Get Single Product
+```http
+GET /api/products/507f1f77bcf86cd799439012
+```
+
+**Response (200):**
+```json
+{
+  "message": "Product found successfully",
+  "product": {...}
+}
+```
+
+#### Update Product
+```http
+PUT /api/products/507f1f77bcf86cd799439012
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+name=Updated Name
+description=Updated Description
+price=8999
+category=Fashion
+images=<file1>, <file2> (optional)
+```
+
+**Response (200):**
+```json
+{
+  "message": "product updated successfully",
+  "product": {...}
+}
+```
+
+#### Delete Product
+```http
+DELETE /api/products/507f1f77bcf86cd799439012
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "product deleted successfully"
+}
+```
+
+### ImageKit Endpoints
+
+#### Get Upload Token
+```http
+GET /api/imagekit/auth
+```
+
+**Response (200):**
+```json
+{
+  "token": "token_string",
+  "expire": 1234567890,
+  "publicKey": "your_public_key",
+  "signature": "signature_string"
+}
+```
+
+---
+
+## Product Categories
+
+Supported categories:
+- Electronics
+- Fashion
+- Home
+- Health
+- Beauty
+- Sports
+- Toys
+- Groceries
+- Automotive
+- Books
+- Others
+
+---
+
+## Authentication
+
+The API uses JWT (JSON Web Tokens) for authentication. Tokens are stored in httpOnly cookies after login/registration.
+
+**Secure Cookie Flags:**
+- `httpOnly`: Prevents XSS attacks by making cookie inaccessible to JavaScript
+- `Secure`: Only sent over HTTPS in production
+- `sameSite: Strict`: Prevents CSRF attacks
+- `maxAge`: 7 days (604,800,000 ms)
+
+**Protected Routes:**
+All routes requiring authentication must include the JWT cookie (automatically sent by browser).
+
+---
+
+## Error Handling
+
+### Error Response Format
+```json
+{
+  "success": false,
+  "message": "Error description here"
+}
+```
+
+### Common HTTP Status Codes
+- `200`: Success
+- `201`: Created
+- `400`: Bad Request (validation error)
+- `401`: Unauthorized (authentication required)
+- `404`: Not Found
+- `500`: Internal Server Error
+
+### Example Error Responses
+
+**Invalid Email:**
+```json
+{
+  "success": false,
+  "message": "Invalid Email"
+}
+```
+
+**Email Already Exists:**
+```json
+{
+  "success": false,
+  "message": "Email already Exists!"
+}
+```
+
+**Unauthorized Access:**
+```json
+{
+  "success": false,
+  "message": "Unauthorized access"
+}
+```
+
+**Product Not Found:**
+```json
+{
+  "success": false,
+  "message": "Product not found"
+}
+```
+
+---
+
+## Troubleshooting
+
+### Server Won't Start
+- Check if MongoDB is running: `mongod`
+- Verify PORT is not already in use
+- Check .env file has all required variables
+- Check logs for error messages
+
+### Authentication Issues
+- Ensure cookie is being sent with requests
+- Check JWT_SECRET is same across all instances
+- Clear cookies if getting "Unauthorized" unexpectedly
+- Verify user exists in database
+
+### Image Upload Issues
+- Check ImageKit credentials in .env
+- Verify file size is within limits
+- Check multer upload middleware configuration
+- Ensure IMAGEKIT_URL_ENDPOINT is correct
+
+### Database Connection Errors
+- Check MongoDB connection string in MONGODB_URI
+- Verify MongoDB service is running
+- Check network connectivity for cloud MongoDB (Atlas)
+- Verify credentials in connection string
+
+---
+
+## Security Best Practices
+
+1. **Never commit .env file** - Use .env.example as template
+2. **Use strong JWT_SECRET** - Generate with crypto module (minimum 32 characters)
+3. **Enable HTTPS in production** - Required for secure cookies
+4. **Validate all user inputs** - Already implemented with express-validator
+5. **Use environment variables** - Never hardcode secrets
+6. **Keep dependencies updated** - Run `npm audit` regularly
+7. **Implement rate limiting** - Prevent brute force attacks (recommended future enhancement)
+8. **Use strong passwords** - Minimum 6 characters enforced
+
+---
+
+## Performance Considerations
+
+1. **Pagination** - Use page and limit parameters for large datasets
+2. **Indexes** - MongoDB indexes are created on unique/frequently queried fields
+3. **Password Hashing** - Bcrypt with salt rounds = 10 (secure, slightly slower)
+4. **Query Optimization** - Only required fields are selected in queries
+5. **Image Compression** - ImageKit handles automatic image optimization
+
+---
+
+## Future Enhancements
+
+- [ ] Implement rate limiting (express-rate-limit)
+- [ ] Add request logging (Morgan)
+- [ ] Implement Redis caching
+- [ ] Add API documentation (Swagger/OpenAPI)
+- [ ] Unit tests with Jest
+- [ ] Integration tests
+- [ ] CI/CD with GitHub Actions
+- [ ] Docker containerization
+- [ ] Logout endpoint with token revocation
+- [ ] Product reviews and ratings
+
+---
+
+## Contributing
+
+This is a peer-review assignment. For improvements and bug fixes, please:
+
+1. Create a feature branch: `git checkout -b feature/your-feature`
+2. Make your changes with meaningful commits
+3. Submit a pull request with detailed description
+4. Ensure all tests pass before submitting
+
+---
+
+## License
+
+This project is part of the Kodex Program at Sheryians Coding School.
+
 ### 1. Install Dependencies
 
 ```bash
