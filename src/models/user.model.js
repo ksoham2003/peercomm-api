@@ -6,16 +6,20 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      min: [3, "name should be atleast 3 charecters"],
+      minlength: [3, "name should be at least 3 characters"],
     },
     email: {
       type: String,
+      required: [true, "email is required"],
       unique: true,
       lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, "please provide a valid email"],
     },
     password: {
       type: String,
-      min: [6, "Password contains atleast 6 charecters"],
+      required: [true, "password is required"],
+      minlength: [6, "Password should be at least 6 characters"],
+      select: false, // Don't include password in queries by default
     },
     active: {
       type: Boolean,
@@ -25,14 +29,21 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Hash the password whenever it is first set or later changed.
+/**
+ * Pre-save middleware to hash password before storing
+ * Only hashes if password is new or modified
+ */
 userSchema.pre("save", function () {
   if (!this.isModified("password")) return;
 
   this.password = bcrypt.hashSync(this.password, 10);
 });
 
-// Compare login input against the stored bcrypt hash.
+/**
+ * Compare provided password with stored bcrypt hash
+ * @param {string} password - Plain text password to verify
+ * @returns {boolean} True if passwords match, false otherwise
+ */
 userSchema.methods.comparePassword = function (password) {
   return bcrypt.compareSync(password, this.password);
 };
