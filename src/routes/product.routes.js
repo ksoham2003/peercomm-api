@@ -3,7 +3,7 @@ import {
   createProduct,
   deleteProduct,
   getAllProducts,
-  getMyProdcuts,
+  getMyProducts,
   getSingleProduct,
   updateProduct,
 } from "../controllers/product.controller.js";
@@ -27,7 +27,7 @@ router.post(
 router.get("/", getAllProducts);
 
 // Authenticated seller inventory.
-router.get("/my", authMiddleware, getMyProdcuts);
+router.get("/my", authMiddleware, getMyProducts);
 
 router.get("/:id", getSingleProduct);
 
